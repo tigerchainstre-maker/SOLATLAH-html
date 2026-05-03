@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SOLATLAH v26 - Acode Edition</title>
+    <style>
+        :root {
+            /* Warna Langit & Mint (Tiada Hitam) */
+            --sky-blue: #87CEEB;
+            --mint-sky: #98FF98;
+            --glass-white: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --deep-ocean: #005b96; /* Teks Biru Pekat */
+            --forest-green: #1b5e20; /* Teks Hijau Pekat */
+            --ios-blur: blur(35px);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            background: linear-gradient(135deg, var(--sky-blue) 0%, var(--mint-sky) 100%);
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--forest-green);
+        }
+
+        /* App Shell - Memenuhi skrin Acode */
+        .app-shell {
+            width: 100%;
+            height: 100%;
+            max-width: 500px;
+            background: var(--glass-white);
+            backdrop-filter: var(--ios-blur);
+            -webkit-backdrop-filter: var(--ios-blur);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .app-shell::-webkit-scrollbar { display: none; }
+
+        .header {
+            padding: 60px 20px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: -2px;
+            background: linear-gradient(to right, var(--deep-ocean), var(--forest-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .date-display {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--deep-ocean);
+            opacity: 0.8;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* Button Glass Transparansi */
+        .btn-location {
+            background: rgba(255, 255, 255, 0.4);
+            color: var(--forest-green);
+            border: 1.5px solid white;
+            padding: 15px 35px;
+            border-radius: 30px;
+            font-weight: 800;
+            cursor: pointer;
+            margin: 20px auto;
+            display: block;
+            backdrop-filter: blur(10px);
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-location:active { transform: scale(0.92); background: white; }
+
+        /* Map Area */
+        #map-container {
+            width: 90%;
+            height: 0;
+            margin: 0 auto;
+            border-radius: 30px;
+            overflow: hidden;
+            transition: height 0.6s ease;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #map-container.active { height: 180px; border: 1.5px solid white; margin-bottom: 20px; }
+
+        /* Prayer Times */
+        .prayer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .prayer-card {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .prayer-card.full { grid-column: span 2; display: flex; justify-content: space-around; align-items: center; }
+
+        .prayer-card span { font-size: 0.75rem; font-weight: 800; opacity: 0.6; text-transform: uppercase; }
+        .prayer-card b { font-size: 1.6rem; color: var(--forest-green); display: block; }
+
+        /* Checklist Section */
+        .checklist-area { padding: 0 20px 40px; }
+
+        .checklist-title {
+            font-weight: 900;
+            color: var(--deep-ocean);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .check-item {
+            background: rgba(255, 255, 255, 0.4);
+            margin-bottom: 12px;
+            padding: 18px 25px;
+            border-radius: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* iOS Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 55px;
+            height: 32px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.5);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px; width: 26px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #34c759; }
+        input:checked + .slider:before { transform: translateX(23px); }
+
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <div class="header">
+        <h1>SOLATLAH</h1>
+        <div class="date-display" id="date-ui">...</div>
+        <button class="btn-location" onclick="sahkanLokasi()">SAHKAN LOKASI</button>
+        <div id="map-container">
+            <iframe id="map-frame" width="100%" height="100%" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <div class="prayer-grid">
+        <div class="prayer-card"><span>Subuh</span><b>05:51</b></div>
+        <div class="prayer-card"><span>Zohor</span><b>13:15</b></div>
+        <div class="prayer-card"><span>Asar</span><b>16:34</b></div>
+        <div class="prayer-card"><span>Maghrib</span><b>19:21</b></div>
+        <div class="prayer-card full"><span>Isyak</span><b>20:32</b></div>
+    </div>
+
+    <div class="checklist-area">
+        <div class="checklist-title">
+            <span>SEMAKAN SOLAT</span>
+            <span style="font-size: 0.6rem; color: #34c759;">AUTO-RESET @ 12AM</span>
+        </div>
+        <div id="checklist-ui"></div>
+    </div>
+</div>
+
+<audio id="azan-audio" src="https://www.islamicfinder.org/prayer-times/azan/azan-1.mp3"></audio>
+
+<script>
+    const solatArray = ['Subuh', 'Zohor', 'Asar', 'Maghrib', 'Isyak'];
+
+    function sahkanLokasi() {
+        document.getElementById('map-container').classList.add('active');
+        // Simulasi Kajang, Selangor
+        document.getElementById('map-frame').src = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d15935.123456789!2d$01.7874!3d2.9935!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sms!2smy!4v1600000000000!5m2!1sms!2smy`;
+        alert("Lokasi Disahkan: Biru Langit & Mint Green Diaktifkan.");
+    }
+
+    function loadChecklist() {
+        const today = new Date().toLocaleDateString('ms-MY');
+        const lastDate = localStorage.getItem('v26_last_date');
+
+        if (lastDate !== today) {
+            solatArray.forEach(s => localStorage.removeItem('v26_check_' + s));
+            localStorage.setItem('v26_last_date', today);
+        }
+
+        const container = document.getElementById('checklist-ui');
+        container.innerHTML = '';
+
+        solatArray.forEach(s => {
+            const isChecked = localStorage.getItem('v26_check_' + s) === 'true';
+            container.innerHTML += `
+                <div class="check-item">
+                    <span style="font-weight: 800;">${s}</span>
+                    <label class="switch">
+                        <input type="checkbox" onchange="saveCheck('${s}', this.checked)" ${isChecked ? 'checked' : ''}>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            `;
+        });
+        
+        document.getElementById('date-ui').innerText = new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function saveCheck(name, val) {
+        localStorage.setItem('v26_check_' + name, val);
+    }
+
+    setInterval(() => {
+        const now = new Date();
+        const currentTime = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        const prayerTimes = ["05:51", "13:15", "16:34", "19:21", "20:32"];
+        
+        if (prayerTimes.includes(currentTime) && now.getSeconds() === 0) {
+            document.getElementById('azan-audio').play();
+            alert("Masa untuk " + currentTime + ". Azan sedang dikumandangkan.");
+        }
+    }, 1000);
+
+    window.onload = loadChecklist;
+</script>
+
+</body>
+</html>
